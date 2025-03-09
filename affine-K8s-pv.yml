@@ -5,14 +5,18 @@ metadata:
   namespace: affine
 spec:
   capacity:
-    storage: 1Gi
+    storage: 5Gi
   accessModes:
-    - ReadWriteOnce
+    - ReadWriteMany  # Multi-node access
   persistentVolumeReclaimPolicy: Retain
-  hostPath:
-    path: "/data/postgres"
+  storageClassName: azurefile
+  azureFile:
+    secretName: azure-secret
+    shareName: postgres-data
+    readOnly: false
 
 ---
+
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
@@ -20,26 +24,33 @@ metadata:
   namespace: affine
 spec:
   accessModes:
-    - ReadWriteOnce
+    - ReadWriteMany
   resources:
     requests:
-      storage: 1Gi
+      storage: 5Gi
+  storageClassName: azurefile
 
 ---
+
 apiVersion: v1
 kind: PersistentVolume
 metadata:
   name: affine-upload-pv
   namespace: affine
 spec:
-  capacity:
-    storage: 5Gi
+ capacity:
+    storage: 10Gi
   accessModes:
-    - ReadWriteOnce
-  hostPath:
-    path: "/data/affine/storage"
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: azurefile
+  azureFile:
+    secretName: azure-secret
+    shareName: affine-uploads
+    readOnly: false
 
 ---
+
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
@@ -47,32 +58,8 @@ metadata:
   namespace: affine
 spec:
   accessModes:
-    - ReadWriteOnce
+    - ReadWriteMany
   resources:
     requests:
-      storage: 5Gi
----
-apiVersion: v1
-kind: PersistentVolume
-metadata:
-  name: affine-config-pv
-  namespace: affine
-spec:
-  capacity:
-    storage: 2Gi
-  accessModes:
-    - ReadWriteOnce
-  hostPath:
-    path: "/data/affine/config"
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: affine-config-pvc
-  namespace: affine
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 5Gi
+      storage: 10Gi
+  storageClassName: azurefile
