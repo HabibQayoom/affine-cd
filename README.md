@@ -19,7 +19,7 @@ Affine-CD is a continuous deployment setup for the Affine project. This reposito
 4. For testing deploy :
    ```bash
     kubectl port-forward svc/affine 8080:80
-  http://<yourip>:8080
+  http://yourip:8080
  Or change the service type ClusterIp to NodePort 
  So they give a port 
   ```bash
