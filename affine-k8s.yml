@@ -18,11 +18,6 @@ spec:
           image: ghcr.io/toeverything/affine-graphql:stable
           ports:
             - containerPort: 3010
-          volumeMounts:
-            - name: upload-storage
-              mountPath: /root/.affine/storage
-            - name: config-storage
-              mountPath: /root/.affine/config
           env:
             - name: REDIS_SERVER_HOST
               valueFrom:
@@ -50,10 +45,6 @@ spec:
         - name: upload-storage
           persistentVolumeClaim:
             claimName: affine-upload-pvc
-        - name: config-storage
-          persistentVolumeClaim:
-            claimName: affine-config-pvc
-
 ---
 apiVersion: v1
 kind: Service
@@ -181,9 +172,6 @@ spec:
           image: postgres:16
           ports:
             - containerPort: 5432
-          volumeMounts:
-            - name: postgres-data
-              mountPath: /var/lib/postgresql/data
           env:
             - name: POSTGRES_USER
               valueFrom:
@@ -203,7 +191,7 @@ spec:
             requests:
               cpu: "500m"    
       volumes:
-        - name: postgres-data
+        - name: postgres-storage
           persistentVolumeClaim:
             claimName: postgres-pvc
 
