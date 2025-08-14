@@ -3,10 +3,30 @@ name: Add or Update Multiple Key/Value Pairs in AWS Secrets
 on:
   workflow_dispatch:
     inputs:
-      key_value_pairs:
-        description: 'Enter key-value pairs (format: key1=value1,key2=value2,...)'
+      key1:
+        description: 'First Secret Key Name'
         type: string
         required: true
+      value1:
+        description: 'First Secret Key Value'
+        type: string
+        required: true
+      key2:
+        description: 'Second Secret Key Name (optional)'
+        type: string
+        required: false
+      value2:
+        description: 'Second Secret Key Value (optional)'
+        type: string
+        required: false
+      key3:
+        description: 'Third Secret Key Name (optional)'
+        type: string
+        required: false
+      value3:
+        description: 'Third Secret Key Value (optional)'
+        type: string
+        required: false
 
 env:
   AWS_REGION: us-east-1
@@ -41,19 +61,24 @@ jobs:
           jq --version
           echo "INFO: Working with production environment."
           
-          # Parse the input to handle multiple key-value pairs
-          IFS=',' read -r -a key_value_array <<< "${{ inputs.key_value_pairs }}"
-          
           # Initialize the new JSON object
           MERGED_SECRET="$AWS_SECRET"
           
-          # Loop through each key-value pair and merge it
-          for pair in "${key_value_array[@]}"; do
-            KEY=$(echo "$pair" | cut -d '=' -f 1)
-            VALUE=$(echo "$pair" | cut -d '=' -f 2)
-            NEW_JSON_OBJ="{ \"$KEY\": \"$VALUE\"}"
+          # Check and process each key-value pair
+          if [[ "${{ inputs.key1 }}" != "" ]] && [[ "${{ inputs.value1 }}" != "" ]]; then
+            NEW_JSON_OBJ="{ \"${{ inputs.key1 }}\": \"${{ inputs.value1 }}\"}"
             MERGED_SECRET=$(echo "$MERGED_SECRET" | jq -s '.[0] * .[1]' <(echo "$MERGED_SECRET") <(echo "$NEW_JSON_OBJ"))
-          done
+          fi
+
+          if [[ "${{ inputs.key2 }}" != "" ]] && [[ "${{ inputs.value2 }}" != "" ]]; then
+            NEW_JSON_OBJ="{ \"${{ inputs.key2 }}\": \"${{ inputs.value2 }}\"}"
+            MERGED_SECRET=$(echo "$MERGED_SECRET" | jq -s '.[0] * .[1]' <(echo "$MERGED_SECRET") <(echo "$NEW_JSON_OBJ"))
+          fi
+
+          if [[ "${{ inputs.key3 }}" != "" ]] && [[ "${{ inputs.value3 }}" != "" ]]; then
+            NEW_JSON_OBJ="{ \"${{ inputs.key3 }}\": \"${{ inputs.value3 }}\"}"
+            MERGED_SECRET=$(echo "$MERGED_SECRET" | jq -s '.[0] * .[1]' <(echo "$MERGED_SECRET") <(echo "$NEW_JSON_OBJ"))
+          fi
 
           # Update the secret in AWS Secrets Manager
           echo "INFO: Updating Production Secret"
