@@ -1,14 +1,10 @@
-name: Add or Update Key/Value in AWS Secrets
+name: Add or Update Multiple Key/Value Pairs in AWS Secrets
 
 on:
   workflow_dispatch:
     inputs:
-      key1:
-        description: 'Secret Key Name'
-        type: string
-        required: true
-      value1:
-        description: 'Secret Key Value'
+      key_value_pairs:
+        description: 'Enter key-value pairs (format: key1=value1,key2=value2,...)'
         type: string
         required: true
 
@@ -39,21 +35,30 @@ jobs:
         with:
           secret-ids: AWS_SECRET,${{ env.PRODUCTION_SECRET_KEY }}
   
-      - name: Update Production Secret
+      - name: Process and Update Multiple Key-Value Pairs
         shell: bash
         run: |
           jq --version
           echo "INFO: Working with production environment."
-          if [[ "${KEY1}" != "" ]] && [[ "${VALUE1}" != "" ]]; then
-            NEW_JSON_OBJ="{ \"$KEY1\": \"$VALUE1\"}"
-            MERGED=$(jq -s '.[0] * .[1]' <(echo "$AWS_SECRET") <(echo "$NEW_JSON_OBJ"))
-  
-            echo "INFO: Update Production Secret"
-            aws secretsmanager put-secret-value \
-              --secret-id "${SECRET_KEY}" \
-              --secret-string "${MERGED}"
-          fi
+          
+          # Parse the input to handle multiple key-value pairs
+          IFS=',' read -r -a key_value_array <<< "${{ inputs.key_value_pairs }}"
+          
+          # Initialize the new JSON object
+          MERGED_SECRET="$AWS_SECRET"
+          
+          # Loop through each key-value pair and merge it
+          for pair in "${key_value_array[@]}"; do
+            KEY=$(echo "$pair" | cut -d '=' -f 1)
+            VALUE=$(echo "$pair" | cut -d '=' -f 2)
+            NEW_JSON_OBJ="{ \"$KEY\": \"$VALUE\"}"
+            MERGED_SECRET=$(echo "$MERGED_SECRET" | jq -s '.[0] * .[1]' <(echo "$MERGED_SECRET") <(echo "$NEW_JSON_OBJ"))
+          done
+
+          # Update the secret in AWS Secrets Manager
+          echo "INFO: Updating Production Secret"
+          aws secretsmanager put-secret-value \
+            --secret-id "${SECRET_KEY}" \
+            --secret-string "${MERGED_SECRET}"
         env:
-          KEY1: ${{ inputs.key1 }}
-          VALUE1: ${{ inputs.value1 }}
           SECRET_KEY: ${{ env.PRODUCTION_SECRET_KEY }}
