@@ -1,32 +1,96 @@
+name: Add or Update Key/Value in AWS Secrets
+
+on:
+  workflow_dispatch:
+    inputs:
+      key1:
+        description: 'Secret Key Name'
+        type: string
+        required: true
+      value1:
+        description: 'Secret Key Value'
+        type: string
+        required: true
+
+env:
+  AWS_REGION: us-east-1
+  PRODUCTION_SECRET_KEY: fieldopsgpt-prod  # Secret name for production
+
+jobs:
+  aws-secrets-production:
+    runs-on: ubuntu-latest
+    steps:
+      
+name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+
+name: Setup jq
+uses: dcarbone/install-jq-action@v2
+with:
+  version: '1.8'
+  force: true
+
+name: Load Production Secret
+id: get-secrets
+uses: aws-actions/aws-secretsmanager-get-secrets@v2
+with:
+  secret-ids: AWS_SECRET,${{ env.PRODUCTION_SECRET_KEY }}
+
+name: Update Production Secret
+shell: bash
+run: |
+  jq --version
+  echo "INFO: Working with production environment."
+  if [[ "${KEY1}" != "" ]] && [[ "${VALUE1}" != "" ]]; then
+    NEW_JSON_OBJ="{ "$KEY1": "$VALUE1"}"
+    MERGED=$(jq -s '.[0] * .[1]' <(echo "$AWS_SECRET") <(echo "$NEW_JSON_OBJ"))
+
+          echo "INFO: Update Production Secret"
+          aws secretsmanager put-secret-value \--secret-id "${SECRET_KEY}" \--secret-string "${MERGED}"
+        fi
+      env:
+        KEY1: ${{ inputs.key1 }}
+        VALUE1: ${{ inputs.value1 }}
+        SECRET_KEY: ${{ env.PRODUCTION_SECRET_KEY }}
+name: Add or Update Multiple Key/Value Pairs in AWS Secrets
+
+on:
+  workflow_dispatch:
+    inputs:
+      key_value_pairs:
+Expand
+message.txt
+3 KB
+Taqi — 14/08/2025 22:09
 name: Add or Update Multiple Key/Value Pairs in AWS Secrets
 
 on:
   workflow_dispatch:
     inputs:
       key1:
-        description: 'First Secret Key Name'
+Expand
+message.txt
+4 KB
+Taqi — 01:48
+jani
+baat sun
+name: Add or Update a Key/Value Pair in AWS Secrets
+
+on:
+  workflow_dispatch:
+    inputs:
+      key:
+        description: 'Secret Key Name'
         type: string
         required: true
-      value1:
-        description: 'First Secret Key Value'
+      value:
+        description: 'Secret Key Value'
         type: string
         required: true
-      key2:
-        description: 'Second Secret Key Name (optional)'
-        type: string
-        required: false
-      value2:
-        description: 'Second Secret Key Value (optional)'
-        type: string
-        required: false
-      key3:
-        description: 'Third Secret Key Name (optional)'
-        type: string
-        required: false
-      value3:
-        description: 'Third Secret Key Value (optional)'
-        type: string
-        required: false
 
 env:
   AWS_REGION: us-east-1
@@ -55,7 +119,7 @@ jobs:
         with:
           secret-ids: AWS_SECRET,${{ env.PRODUCTION_SECRET_KEY }}
   
-      - name: Process and Update Multiple Key-Value Pairs
+      - name: Process and Update Key-Value Pair
         shell: bash
         run: |
           jq --version
@@ -64,19 +128,92 @@ jobs:
           # Initialize the new JSON object
           MERGED_SECRET="$AWS_SECRET"
           
-          # Check and process each key-value pair
-          if [[ "${{ inputs.key1 }}" != "" ]] && [[ "${{ inputs.value1 }}" != "" ]]; then
-            NEW_JSON_OBJ="{ \"${{ inputs.key1 }}\": \"${{ inputs.value1 }}\"}"
+          # Check and process the key-value pair
+          if [[ "${{ inputs.key }}" != "" ]] && [[ "${{ inputs.value }}" != "" ]]; then
+            NEW_JSON_OBJ="{ \"${{ inputs.key }}\": \"${{ inputs.value }}\"}"
             MERGED_SECRET=$(echo "$MERGED_SECRET" | jq -s '.[0] * .[1]' <(echo "$MERGED_SECRET") <(echo "$NEW_JSON_OBJ"))
           fi
 
-          if [[ "${{ inputs.key2 }}" != "" ]] && [[ "${{ inputs.value2 }}" != "" ]]; then
-            NEW_JSON_OBJ="{ \"${{ inputs.key2 }}\": \"${{ inputs.value2 }}\"}"
-            MERGED_SECRET=$(echo "$MERGED_SECRET" | jq -s '.[0] * .[1]' <(echo "$MERGED_SECRET") <(echo "$NEW_JSON_OBJ"))
-          fi
+          # Update the secret in AWS Secrets Manager
+          echo "INFO: Updating Production Secret"
+          aws secretsmanager put-secret-value \
+            --secret-id "${SECRET_KEY}" \
+            --secret-string "${MERGED_SECRET}"
+        env:
+          SECRET_KEY: ${{ env.PRODUCTION_SECRET_KEY }}
+Collapse
+message.txt
+3 KB
+Habib — 01:48
+Wasig bhai ka message
+Aaya ka
+Taqi — 01:48
+Jani yeh pipeline zra chalai repo
+pe aur bta kaam krr rhi ha?
+Habib — 01:49
+ok
+Taqi — 01:49
+han hogyi thi baat
+yeh zra chala k batai k store kr rhi ha values?
+Habib — 01:50
+ok
+﻿
+DevOps Intern
+Taqi
+taqi1477
+name: Add or Update a Key/Value Pair in AWS Secrets
 
-          if [[ "${{ inputs.key3 }}" != "" ]] && [[ "${{ inputs.value3 }}" != "" ]]; then
-            NEW_JSON_OBJ="{ \"${{ inputs.key3 }}\": \"${{ inputs.value3 }}\"}"
+on:
+  workflow_dispatch:
+    inputs:
+      key:
+        description: 'Secret Key Name'
+        type: string
+        required: true
+      value:
+        description: 'Secret Key Value'
+        type: string
+        required: true
+
+env:
+  AWS_REGION: us-east-1
+  PRODUCTION_SECRET_KEY: fieldopsgpt-prod  # Secret name for production
+
+jobs:
+  aws-secrets-production:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+  
+      - name: Setup jq
+        uses: dcarbone/install-jq-action@v2
+        with:
+          version: '1.8'
+          force: true
+  
+      - name: Load Production Secret
+        id: get-secrets
+        uses: aws-actions/aws-secretsmanager-get-secrets@v2
+        with:
+          secret-ids: AWS_SECRET,${{ env.PRODUCTION_SECRET_KEY }}
+  
+      - name: Process and Update Key-Value Pair
+        shell: bash
+        run: |
+          jq --version
+          echo "INFO: Working with production environment."
+          
+          # Initialize the new JSON object
+          MERGED_SECRET="$AWS_SECRET"
+          
+          # Check and process the key-value pair
+          if [[ "${{ inputs.key }}" != "" ]] && [[ "${{ inputs.value }}" != "" ]]; then
+            NEW_JSON_OBJ="{ \"${{ inputs.key }}\": \"${{ inputs.value }}\"}"
             MERGED_SECRET=$(echo "$MERGED_SECRET" | jq -s '.[0] * .[1]' <(echo "$MERGED_SECRET") <(echo "$NEW_JSON_OBJ"))
           fi
 
