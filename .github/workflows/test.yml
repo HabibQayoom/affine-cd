@@ -1,5 +1,4 @@
 name: Add or Update Key/Value in AWS Secrets
-
 on:
   workflow_dispatch:
     inputs:
